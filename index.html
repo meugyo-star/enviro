@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GREEN ACTION TOP 10</title>
+<style>
+  :root{
+    --bg1:#061d54; --bg2:#0b4cc9; --panel:#06296c; --line:#79c7ff;
+    --gold:#ffd75a; --white:#f7fbff; --green:#45d483;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; font-family:Arial,"Noto Sans KR",sans-serif;
+    background:
+      radial-gradient(circle at 50% 15%, #1876ef 0 10%, transparent 28%),
+      linear-gradient(180deg,var(--bg2),var(--bg1) 72%);
+    color:white; display:flex; align-items:center; justify-content:center;
+    overflow-x:hidden;
+  }
+  .stage{width:min(1180px,96vw); padding:22px 18px 30px}
+  .title{
+    text-align:center; font-weight:900; letter-spacing:2px;
+    font-size:clamp(28px,4vw,56px); text-shadow:0 3px 0 #00163e,0 0 18px #7dd6ff;
+    margin-bottom:8px;
+  }
+  .sub{ text-align:center; font-size:clamp(14px,1.7vw,21px); opacity:.9; margin-bottom:18px}
+  .scoreboard{
+    position:relative; padding:26px;
+    border:6px solid #9edcff; border-radius:28px;
+    background:linear-gradient(180deg,#0b55bf,#031d56);
+    box-shadow:0 0 0 5px #001a53,0 0 30px #51b8ff inset,0 12px 40px rgba(0,0,0,.35);
+  }
+    .board{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .col{display:grid; gap:12px}
+  .row{
+    height:116px; display:grid; grid-template-columns:82px 1fr;
+    border:4px solid #d3edff; border-radius:10px; overflow:hidden;
+    box-shadow:0 0 0 2px #001849;
+    cursor:pointer; user-select:none;
+    transform:translateZ(0);
+  }
+  .rank{
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(#1c66bd,#083a83);
+    border-right:4px solid #d3edff;
+    font-size:34px; font-weight:900; color:var(--gold); text-shadow:0 2px #001a4c;
+  }
+  .answer{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    padding:12px 18px; background:linear-gradient(#0a70d7,#053a83);
+    font-weight:900; text-align:center; font-size:clamp(16px,1.8vw,24px);
+    perspective:800px;
+  }
+  .cover,.text{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; transition:.46s transform,.25s opacity}
+  .cover{
+    background:linear-gradient(180deg,#1782e7,#0751a6 55%,#0c3e84);
+    color:#d9f1ff; font-size:20px; letter-spacing:3px;
+  }
+  .cover:after{content:"CLICK TO REVEAL"; opacity:.72}
+  .text{
+    padding:7px 12px; transform:rotateX(-90deg); opacity:0;
+    background:linear-gradient(180deg,#063f79,#031f4f);
+    color:white;
+  }
+  .row.revealed .cover{transform:rotateX(90deg); opacity:0}
+  .row.revealed .text{transform:rotateX(0); opacity:1}
+  .en{display:block;font-size:.92em; line-height:1.25}
+  .ko{display:block;font-size:.56em;font-weight:700;color:#bfeaff;margin-top:4px;line-height:1.3}
+  .controls{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:18px
+  }
+  button{
+    border:0;border-radius:999px;padding:11px 20px;font-weight:900;font-size:16px;cursor:pointer;
+    color:#031b4c;background:#dff4ff;box-shadow:0 4px 0 #84b9db;
+  }
+  button.primary{background:var(--gold);box-shadow:0 4px 0 #b78300}
+  button.danger{background:#ffdede;box-shadow:0 4px 0 #be7777}
+  .source{
+    text-align:center;margin-top:12px;font-size:12px;line-height:1.5;opacity:.72
+  }
+  .flash{
+    animation:flash .5s ease-out;
+  }
+  @keyframes flash{
+    0%{box-shadow:0 0 0 0 rgba(255,215,90,.95)}
+    100%{box-shadow:0 0 0 26px rgba(255,215,90,0)}
+  }
+
+  .guessBox{
+    margin:0 0 18px;
+    padding:18px;
+    border:3px solid #9edcff;
+    border-radius:20px;
+    background:rgba(2,31,85,.72);
+    box-shadow:0 8px 24px rgba(0,0,0,.22);
+  }
+  .guessTitle{
+    text-align:center;
+    font-size:clamp(17px,2vw,24px);
+    font-weight:900;
+    margin-bottom:10px;
+  }
+  .guessRow{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    max-width:760px;
+    margin:0 auto;
+  }
+  #guessInput{
+    width:100%;
+    border:0;
+    outline:0;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:18px;
+    font-weight:700;
+    color:#08245a;
+  }
+  #guessBtn{
+    border-radius:14px;
+    padding:12px 22px;
+  }
+  .guessMsg{
+    min-height:26px;
+    text-align:center;
+    margin-top:10px;
+    font-size:15px;
+    font-weight:800;
+    color:#dff4ff;
+  }
+  .row.unlocked{
+    animation:unlockPop .55s ease-out;
+  }
+  @keyframes unlockPop{
+    0%{transform:scale(.96);filter:brightness(1)}
+    45%{transform:scale(1.035);filter:brightness(1.55)}
+    100%{transform:scale(1);filter:brightness(1)}
+  }
+
+  @media(max-width:760px){
+    .board{grid-template-columns:1fr}
+    .row{height:100px;grid-template-columns:64px 1fr}
+    .rank{font-size:27px}
+    .scoreboard{padding:14px;border-width:4px}
+    .bulbs{grid-template-columns:repeat(12,1fr)}
+    .guessRow{grid-template-columns:1fr}
+    #guessBtn{width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="title">🌍 환경을 돕는 10가지 행동</div>
+  <div class="sub">우리가 쉽게 할 수 있는 환경 행동 10가지 &nbsp;•&nbsp; 칸을 클릭해 공개하세요!</div>
+
+
+  <div class="guessBox">
+    <div class="guessTitle">💡 환경을 돕는 행동을 입력해 보세요!</div>
+    <div class="guessRow">
+      <input id="guessInput" type="text" placeholder="예: 플라스틱 줄이기, 버스 타기, 불 끄기..." autocomplete="off" />
+      <button class="primary" id="guessBtn">입력하기</button>
+    </div>
+    <div class="guessMsg" id="guessMsg">정답과 똑같지 않아도 괜찮아요! 핵심 단어가 들어가고 뜻이 비슷하면 열려요.</div>
+  </div>
+
+  <div class="scoreboard">
+    
+    <div class="board">
+      <div class="col" id="left"></div>
+      <div class="col" id="right"></div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="next">다음 행동 공개</button>
+      <button id="revealAll">전체 공개</button>
+      <button class="danger" id="reset">다시 가리기</button>
+    </div>
+  </div>
+
+  <div class="source">
+    수업용 인터랙티브 보드 • 중1 학생이 이해하기 쉬운 생활 속 환경 행동<br>
+    ※ 숫자는 효과 순위가 아니라 활동용 번호입니다.</div>
+</div>
+
+<script>
+const actions = [
+  {text:["가까운 곳은 걸어가기","近的地方走路去","До близких мест ходить пешком"],
+   keys:["걷기","걸어가기","걸어 다니기","도보","자전거","자전거 타기","가까운 거리 걷기","가까운 곳 걷기","차 대신 걷기","자동차 덜 타기","차 덜 타기","걸어서 가기"]},
+  {text:["버스나 지하철 타기","乘公交车或地铁","Ездить на автобусе или метро"],
+   keys:["버스","지하철","대중교통","대중 교통","버스 타기","지하철 타기","대중교통 이용","차 대신 버스","차 대신 지하철","자동차 덜 타기"]},
+  {text:["텀블러 쓰기","使用随行杯","Пользоваться термокружкой"],
+   keys:["텀블러","개인컵","개인 컵","컵 들고 다니기","일회용컵 안 쓰기","일회용 컵 줄이기","종이컵 안 쓰기","종이컵 줄이기","컵 재사용","다회용컵","다회용 컵"]},
+  {text:["안 쓰는 불 끄기","关掉不用的灯","Выключать ненужный свет"],
+   keys:["불 끄기","불끄기","전등 끄기","전기 끄기","안 쓰는 불","조명 끄기","불을 끄기","전기 아끼기","전기 절약","에너지 절약","콘센트 뽑기","플러그 뽑기","전자제품 끄기"]},
+  {text:["음식 남기지 않기","不剩饭","Не оставлять еду"],
+   keys:["음식 안 남기기","음식 남기지 않기","음식물 쓰레기","잔반","밥 안 남기기","먹을 만큼","음식 줄이기","먹을 만큼 받기","남기지 않기","음식 아끼기"]},
+  {text:["비닐봉지 덜 쓰기","少用塑料袋","Использовать меньше пакетов"],
+   keys:["비닐","비닐봉지","비닐 봉지","플라스틱","플라스틱 줄이기","봉투","봉지","일회용 비닐","장바구니","에코백","비닐 안 쓰기","플라스틱 덜 쓰기","플라스틱 안 쓰기"]},
+  {text:["쓰레기 나눠 버리기","分类扔垃圾","Сортировать мусор"],
+   keys:["분리수거","분리 배출","분리배출","쓰레기 분리","재활용","재활용하기","쓰레기 나눠 버리기","쓰레기 분리하기","재활용품 분리","병 따로 버리기","캔 따로 버리기","종이 따로 버리기"]},
+  {text:["물티슈 덜 쓰기","少用湿纸巾","Использовать меньше влажных салфеток"],
+   keys:["물티슈","물티슈 줄이기","물티슈 덜 쓰기","휴지 대신 손수건","손수건","물티슈 안 쓰기","티슈 줄이기","휴지 줄이기"]},
+  {text:["물 아껴 쓰기","节约用水","Экономить воду"],
+   keys:["물 아끼기","물 아껴 쓰기","물 절약","물 절약하기","물 적게 쓰기","물을 적게 쓰기","물 덜 쓰기","물을 덜 쓰기","수도 잠그기","수도꼭지 잠그기","양치할 때 물 끄기","양치 물 끄기","샤워 짧게","샤워 짧게 하기","수돗물 아끼기","물을 잠그기"]},
+  {text:["일회용품 덜 쓰기","少用一次性用品","Использовать меньше одноразовых вещей"],
+   keys:["일회용품","일회용품 줄이기","일회용품 안 쓰기","일회용 덜 쓰기","빨대 안 쓰기","빨대 줄이기","종이컵 안 쓰기","종이컵 줄이기","일회용 컵","일회용 수저","일회용 포크","일회용 젓가락","다회용품","재사용","다시 쓰기","한번 쓰고 버리는 것 줄이기"]}
+];
+
+// 각 항목이 후보가 되기 위해 반드시 포함해야 하는 핵심 명사/대표어.
+// null이면 별도 필수어 없이 의미 판정만 사용.
+const requiredWords = [
+  null, // 1 가까운 곳은 걸어가기
+  ["버스","지하철","대중교통"], // 2
+  ["텀블러","개인컵","개인 컵","다회용컵","다회용 컵","종이컵","일회용컵","일회용 컵"], // 3
+  ["불","전등","조명","전기","에너지","콘센트","플러그"], // 4
+  ["음식","밥","잔반","음식물"], // 5
+  ["비닐","플라스틱","봉투","봉지","장바구니","에코백"], // 6
+  ["쓰레기","분리수거","분리배출","재활용","병","캔","종이"], // 7
+  ["물티슈"], // 8: 반드시 '물티슈'라는 워딩이 있어야 함
+  ["물","수도","수돗물","샤워","양치"], // 9
+  ["일회용","빨대","종이컵","수저","포크","젓가락","다회용","재사용"] // 10
+];
+
+function passesRequiredWords(input, actionIndex){
+  const req = requiredWords[actionIndex];
+  if(!req) return true;
+  const s = compact(input);
+  return req.some(w => s.includes(compact(w)));
+}
+
+const left=document.getElementById("left");
+const right=document.getElementById("right");
+
+function makeRow(item, i){
+  const row=document.createElement("div");
+  row.className="row";
+  row.dataset.rank=i+1;
+  row.innerHTML=`
+    <div class="rank">${i+1}</div>
+    <div class="answer">
+      <div class="cover"></div>
+      <div class="text">
+        <div>
+          <span class="en">${item.text[0]}</span>
+          <span class="ko">中文 ${item.text[1]}</span>
+          <span class="ko">Русский ${item.text[2]}</span>
+        </div>
+      </div>
+    </div>`;
+  row.addEventListener("click",()=>toggleRow(row));
+  return row;
+}
+actions.forEach((a,i)=>(i<5?left:right).appendChild(makeRow(a,i)));
+
+function ping(freq=640,dur=.09){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=freq; o.type="sine";
+    g.gain.setValueAtTime(.08,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+dur);
+    o.start();o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+function toggleRow(row){
+  const now=!row.classList.contains("revealed");
+  row.classList.toggle("revealed");
+  if(now){row.classList.add("flash");setTimeout(()=>row.classList.remove("flash"),520);ping();}
+}
+document.getElementById("next").onclick=()=>{
+  const next=[...document.querySelectorAll(".row")].find(r=>!r.classList.contains("revealed"));
+  if(next){toggleRow(next);next.scrollIntoView({behavior:"smooth",block:"nearest"});}
+};
+document.getElementById("revealAll").onclick=()=>{
+  document.querySelectorAll(".row").forEach((r,i)=>{
+    setTimeout(()=>{if(!r.classList.contains("revealed"))toggleRow(r)},i*90);
+  });
+};
+document.getElementById("reset").onclick=()=>{
+  document.querySelectorAll(".row").forEach(r=>r.classList.remove("revealed"));
+};
+
+
+function normalizeGuess(s){
+  return (s||"")
+    .toLowerCase()
+    .replace(/[.,!?/\\()\[\]{}"'`~:;_-]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function compact(s){
+  return normalizeGuess(s).replace(/\s+/g,"");
+}
+
+function matchScore(input, key){
+  const a = compact(input);
+  const b = compact(key);
+  if(!a || !b) return 0;
+
+  // 완전 일치
+  if(a===b) return 100;
+
+  // 서로 포함
+  if(a.includes(b) || b.includes(a)){
+    const short=Math.min(a.length,b.length);
+    if(short>=4) return 90;
+    if(short>=2) return 78;
+  }
+
+  // 의미군
+  const synonymGroups = [
+    ["걷기","걸어","도보","자전거"],
+    ["버스","지하철","대중교통"],
+    ["텀블러","개인컵","다회용컵"],
+    ["불","전등","조명","전기","에너지","콘센트","플러그"],
+    ["음식","잔반","음식물쓰레기","밥"],
+    ["비닐","플라스틱","봉투","봉지","장바구니","에코백"],
+    ["분리수거","분리배출","재활용","쓰레기분리"],
+    ["물티슈","티슈","손수건","휴지"],
+    ["물","수도","수돗물","샤워","양치"],
+    ["일회용품","일회용","빨대","종이컵","수저","포크","젓가락","다회용","재사용"]
+  ];
+
+  for(const group of synonymGroups){
+    const aw=group.filter(w=>a.includes(w));
+    const bw=group.filter(w=>b.includes(w));
+    if(aw.length && bw.length){
+      // 같은 의미군이지만 핵심어가 실제로 겹치면 더 높은 점수
+      if(aw.some(x=>bw.includes(x))) return 72;
+      return 62;
+    }
+  }
+
+  // 행동어 제거 후 핵심 명사 비교
+  const actionWords = ["줄이기","줄이","덜쓰기","덜쓰","적게쓰기","적게쓰","안쓰기","안쓰","아끼기","아끼","절약하기","절약","끄기","끄","잠그기","잠그","재사용","다시쓰기","다시쓰","타기","걷기","남기지않기","남기지","나눠버리기","나눠버리"];
+  const stripActions = s => {
+    let x=s;
+    actionWords.forEach(w=>{ x=x.replaceAll(w,""); });
+    return x;
+  };
+  const aa=stripActions(a), bb=stripActions(b);
+  if(aa.length>=2 && bb.length>=2 && (aa.includes(bb) || bb.includes(aa))) return 80;
+
+  // 글자 유사도는 보조용으로만 사용
+  function bigrams(s){
+    const arr=[];
+    for(let i=0;i<s.length-1;i++) arr.push(s.slice(i,i+2));
+    return arr;
+  }
+  const A=bigrams(a), B=bigrams(b);
+  if(A.length && B.length){
+    const hit=A.filter(x=>B.includes(x)).length;
+    const score=(2*hit)/(A.length+B.length);
+    if(score>=0.60) return 58;
+  }
+
+  return 0;
+}
+
+function tryGuess(){
+  const inputEl = document.getElementById("guessInput");
+  const msg = document.getElementById("guessMsg");
+  const value = inputEl.value.trim();
+
+  if(!value){
+    msg.textContent = "환경 행동을 하나 입력해 보세요!";
+    inputEl.focus();
+    return;
+  }
+
+  const rows = [...document.querySelectorAll(".row")];
+  const candidates = [];
+
+  actions.forEach((action,i)=>{
+    const row = rows[i];
+    if(row.classList.contains("revealed")) return;
+
+    // 핵심 명사/대표어가 필요한 항목은 먼저 필수어 검사
+    if(!passesRequiredWords(value,i)) return;
+
+    let best=0;
+    action.keys.forEach(k=>{
+      best=Math.max(best, matchScore(value,k));
+    });
+
+    if(best>=58) candidates.push({i,score:best});
+  });
+
+  if(candidates.length){
+    // 가장 점수가 높은 딱 1개만 열기
+    candidates.sort((x,y)=>y.score-x.score || x.i-y.i);
+    const best=candidates[0];
+    const row=rows[best.i];
+
+    toggleRow(row);
+    row.classList.add("unlocked");
+    setTimeout(()=>row.classList.remove("unlocked"),650);
+
+    msg.textContent = `🎉 비슷한 행동을 찾았어요! ${best.i+1}번 칸이 열립니다.`;
+    inputEl.value="";
+    inputEl.focus();
+  }else{
+    msg.textContent = "🤔 비슷한 칸을 찾지 못했어요. 다른 말로 한 번 더 써 보세요!";
+    inputEl.select();
+  }
+}
+
+document.getElementById("guessBtn").onclick=tryGuess;
+document.getElementById("guessInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    tryGuess();
+  }
+});
+
+document.addEventListener("keydown",e=>{
+  const typing = document.activeElement && document.activeElement.id==="guessInput";
+  if(!typing && (e.key==="Enter"||e.key===" ")){e.preventDefault();document.getElementById("next").click();}
+  if(!typing && e.key.toLowerCase()==="r")document.getElementById("reset").click();
+});
+</script>
+</body>
+</html>
